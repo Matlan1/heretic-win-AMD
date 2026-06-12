@@ -20,6 +20,12 @@ This guide covers running `heretic` natively on **Windows 11** with **AMD RDNA2,
 
 ## Installation
 
+> **Prefer a GUI?** After cloning (step 1 below), double-click
+> **`Heretic-Launcher.bat`** in the repo root. It installs `uv` if missing,
+> runs `uv sync` and the ROCm setup for you, shows setup status, and launches
+> heretic runs from a graphical window — covering steps 2 and 3 with buttons.
+> The command-line instructions below remain fully supported.
+
 ### 1. Clone the repository
 
 ```powershell

@@ -92,7 +92,28 @@ models with Heretic.
 
 ## Usage
 
-### Quick Start (Windows AMD GPU)
+### GUI Launcher (Windows)
+
+The easiest way to get started on Windows: clone the repository, then
+double-click **`Heretic-Launcher.bat`** in the repo root. It opens a graphical
+launcher that walks you through the entire setup and lets you start runs
+without touching the command line:
+
+- **One-click install** — installs the `uv` package manager if missing, runs
+  `uv sync`, and runs the ROCm GPU setup, each in its own console window.
+- **Setup status panel** — shows at a glance whether uv, the dependencies,
+  ROCm, and your GPU are ready.
+- **Run configuration** — paste a Hugging Face model ID or URL (or browse to
+  a local model), pick a config preset (default / nohumor / noslop), set
+  common options like quantization, trial count, and batch size, and hit
+  **Launch**. Heretic starts in a real console window with its full
+  interactive TUI; your settings are remembered for next time.
+- **Desktop shortcut** — one click creates a "Heretic" shortcut on your desktop.
+
+The launcher needs no dependencies of its own — it runs on any Python via
+`uv` or the system Python launcher.
+
+### Quick Start (Windows AMD GPU, command line)
 
 1. Clone and enter the repository:
    ```powershell
