@@ -32,6 +32,11 @@ class RowNormalization(str, Enum):
     FULL = "full"
 
 
+class ExportStrategy(str, Enum):
+    MERGE = "merge"
+    ADAPTER = "adapter"
+
+
 def clean_hf_repo_id(v: str) -> str:
     import re
 
@@ -149,6 +154,15 @@ class Settings(BaseSettings):
         exclude=True,
     )
 
+    reproduce: str | None = Field(
+        default=None,
+        description=(
+            "If this path or URL to a reproduce.json file is set, load reproduction information "
+            "from that file, and attempt to reproduce the abliterated model it originated from."
+        ),
+        exclude=True,
+    )
+
     dtypes: list[str] = Field(
         default=[
             # In practice, "auto" almost always means bfloat16.
@@ -195,13 +209,6 @@ class Settings(BaseSettings):
             "This lowers peak VRAM usage during residual analysis and evaluation, "
             "but may slightly reduce performance due to host/device transfers."
         ),
-    )
-
-    trust_remote_code: bool | None = Field(
-        default=None,
-        description="Whether to trust remote code when loading the model.",
-        # For security reasons, we don't store this setting.
-        exclude=True,
     )
 
     batch_size: int = Field(
@@ -444,6 +451,11 @@ class Settings(BaseSettings):
     max_shard_size: int | str = Field(
         default="5GB",
         description="Maximum size for individual safetensors files generated when exporting a model.",
+    )
+
+    export_strategy: ExportStrategy | None = Field(
+        default=None,
+        description='How to export the model: "merge", "adapter", or unset to prompt the user.',
     )
 
     refusal_markers: list[str] = Field(
