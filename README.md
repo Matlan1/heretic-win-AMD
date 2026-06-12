@@ -127,6 +127,24 @@ save the model, upload it to Hugging Face, chat with it to test how well it work
 run standard benchmarks on it, or any combination of those actions.
 
 
+### Graphical launcher
+
+For users who prefer not to type command-line options by hand, Heretic includes
+an optional graphical launcher:
+
+```
+heretic-gui
+```
+
+The launcher presents Heretic's configuration options as a form, builds the
+corresponding command line, and starts the run in a terminal (Heretic itself
+remains a terminal application). The form is generated automatically from
+Heretic's settings, so it always offers the same options as the command-line
+interface. The launcher uses only Python's standard library and starts
+instantly; on Linux it requires the system Tkinter package (for example
+`python3-tk` on Debian and Ubuntu).
+
+
 ## Research features
 
 In addition to its primary function of removing model censorship, Heretic also
