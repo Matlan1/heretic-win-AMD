@@ -35,7 +35,7 @@ if "-h" not in sys.argv and "--help" not in sys.argv:
     # If not, tells the user to run setup_rocm.py and exits cleanly.
     #
     # ROCm setup (wheel install + bitsandbytes patch) lives in scripts/setup_rocm.py
-    # which runs BEFORE heretic.exe is launched — avoiding the Windows file-lock
+    # which runs BEFORE heretic.exe is launched - avoiding the Windows file-lock
     # that occurs when uv sync tries to update heretic.exe while it's running.
     # -------------------------------------------------------------------------
     if sys.platform == "win32":
@@ -98,7 +98,7 @@ if "-h" not in sys.argv and "--help" not in sys.argv:
         # 4. If setup is needed: prompt and exit.
         # ------------------------------------------------------------------
         if has_amd and not _already_configured and is_cpu:
-            sys.stdout.write("AMD GPU detected — ROCm isn't configured yet.\n\n")
+            sys.stdout.write("AMD GPU detected - ROCm isn't configured yet.\n\n")
             sys.stdout.write("  [Y] Run first-time setup now\n")
             sys.stdout.write("  [N] I'll handle it myself\n\n")
             sys.stdout.write("Choice [Y/n]: ")
@@ -122,7 +122,7 @@ if "-h" not in sys.argv and "--help" not in sys.argv:
                 # Capture the original console HWND before spawning the setup
                 # window. After setup finishes, the PS1 script uses
                 # SetForegroundWindow + SendKeys to focus this terminal and type
-                # the relaunch command into it — so heretic restarts here.
+                # the relaunch command into it - so heretic restarts here.
                 _orig_hwnd = _ctypes.windll.kernel32.GetConsoleWindow()
 
                 def _sk_escape(s):
@@ -190,7 +190,7 @@ if "-h" not in sys.argv and "--help" not in sys.argv:
                     )
 
                 sys.stdout.write(
-                    "\nSetup is opening in a new window — heretic will relaunch here when done.\n\n"
+                    "\nSetup is opening in a new window - heretic will relaunch here when done.\n\n"
                 )
                 sys.stdout.flush()
                 subprocess.Popen(
@@ -257,7 +257,7 @@ if "-h" not in sys.argv and "--help" not in sys.argv:
                 import safetensors as _st_mod
 
                 class _SafeSliceShim:
-                    """CPU tensor wrapper that looks like PySafeSlice — no Rust."""
+                    """CPU tensor wrapper that looks like PySafeSlice - no Rust."""
 
                     __slots__ = ("_t",)
 
@@ -288,7 +288,7 @@ if "-h" not in sys.argv and "--help" not in sys.argv:
 
                 class _PurePySafeOpen:
                     """
-                    Pure-Python safetensors reader — zero calls to
+                    Pure-Python safetensors reader - zero calls to
                     _safetensors_rust.pyd.
 
                     Reads the safetensors binary format with struct+json,

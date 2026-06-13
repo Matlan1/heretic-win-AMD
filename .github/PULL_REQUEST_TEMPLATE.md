@@ -4,8 +4,8 @@
 
 ## Type of change
 
-- [ ] Bug fix — Windows/ROCm specific
-- [ ] Bug fix — general
+- [ ] Bug fix - Windows/ROCm specific
+- [ ] Bug fix - general
 - [ ] New feature / enhancement
 - [ ] Upstream sync (from [p-e-w/heretic](https://github.com/p-e-w/heretic))
 - [ ] Documentation
@@ -19,7 +19,7 @@
 
 ## Checklist
 
-- [ ] `uv run ruff format .` — no changes needed
-- [ ] `uv run ruff check .` — no errors
+- [ ] `uv run ruff format .` - no changes needed
+- [ ] `uv run ruff check .` - no errors
 - [ ] PR title follows Conventional Commits (`fix:`, `feat:`, `docs:`, `chore:`, etc.)
-- [ ] For upstream syncs: Windows patches in `main.py` sections 4–6 are intact
+- [ ] For upstream syncs: Windows patches in `main.py` sections 4-6 are intact

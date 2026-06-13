@@ -2,11 +2,11 @@
 # Copyright (C) 2025-2026  Philipp Emanuel Weidmann <pew@worldwidemann.com> + contributors
 
 """
-launcher.py — Heretic Windows GUI launcher & installer.
+launcher.py - Heretic Windows GUI launcher & installer.
 
 A zero-dependency (stdlib-only) tkinter front-end for the Heretic
 Windows/AMD ROCm fork. It is intentionally NOT a replacement for the
-heretic TUI — heretic itself is interactive (rich + questionary) and
+heretic TUI - heretic itself is interactive (rich + questionary) and
 requires a real Windows console. Instead, this launcher:
 
   1. Shows install status (uv, dependencies, ROCm setup, GPU, torch).
@@ -16,7 +16,7 @@ requires a real Windows console. Instead, this launcher:
      and launches `uv run heretic ...` in a new console window.
 
 Because it only uses the standard library, it runs on any Python 3.9+
-interpreter — including before the project's dependencies are installed.
+interpreter - including before the project's dependencies are installed.
 
 Launch it by double-clicking Heretic-Launcher.bat in the repo root, or:
 
@@ -47,9 +47,9 @@ ROCM_MARKER = REPO_ROOT / ".heretic_rocm_arch"
 
 CONFIG_PRESETS = {
     "(keep current config.toml)": None,
-    "default — standard abliteration": "config.default.toml",
-    "nohumor — suppress jokes/humor": "config.nohumor.toml",
-    "noslop — suppress purple prose": "config.noslop.toml",
+    "default - standard abliteration": "config.default.toml",
+    "nohumor - suppress jokes/humor": "config.nohumor.toml",
+    "noslop - suppress purple prose": "config.noslop.toml",
 }
 
 FORCE_ARCH_CHOICES = ["auto-detect", "rdna2", "rdna3", "rdna4", "cpu"]
@@ -210,7 +210,7 @@ def quote_arg(arg: str) -> str:
 class HereticLauncher(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Heretic Launcher — Windows & AMD ROCm fork")
+        self.title("Heretic Launcher - Windows & AMD ROCm fork")
         self.configure(bg=BG)
         self.resizable(False, False)
 
@@ -279,7 +279,7 @@ class HereticLauncher(tk.Tk):
         )
         ttk.Label(
             root,
-            text="Fully automatic censorship removal for language models — Windows & AMD ROCm fork",
+            text="Fully automatic censorship removal for language models - Windows & AMD ROCm fork",
             style="Sub.TLabel",
         ).pack(anchor="w", padx=14, pady=(0, 8))
 
@@ -498,14 +498,14 @@ class HereticLauncher(tk.Tk):
             set_row(
                 "uv",
                 bool(self.uv_path),
-                f"uv package manager: {self.uv_path or 'not found — click Install uv'}",
+                f"uv package manager: {self.uv_path or 'not found - click Install uv'}",
             )
             set_row(
                 "deps",
                 deps,
                 "dependencies installed (.venv)"
                 if deps
-                else "dependencies not installed — click Install dependencies",
+                else "dependencies not installed - click Install dependencies",
             )
             if marker:
                 set_row("rocm", True, f"ROCm configured: {marker}")
@@ -513,7 +513,7 @@ class HereticLauncher(tk.Tk):
                 set_row(
                     "rocm",
                     False,
-                    "ROCm not configured — click Run ROCm setup (AMD GPUs only)",
+                    "ROCm not configured - click Run ROCm setup (AMD GPUs only)",
                     warn=True,
                 )
             if torch:

@@ -7,9 +7,9 @@
 > This repository is a fork of the original [heretic](https://github.com/p-e-w/heretic) project, modified to run natively on **Windows 11** with **AMD RDNA2, RDNA3, and RDNA4 GPUs** via ROCm/HIP.
 >
 > **What this fork adds:**
-> - **Native Windows ROCm support** — works out of the box on RX 6000, RX 7000, and RX 9000 series GPUs.
-> - **Interactive first-run setup** — on first launch, heretic detects your AMD GPU and asks whether to run ROCm setup automatically. Choosing **Y** opens a setup window that detects your GPU generation, installs the matching ROCm PyTorch and SDK wheels, patches `bitsandbytes`, then relaunches heretic in your original terminal. You can also trigger setup manually at any time with `uv run python scripts/setup_rocm.py`.
-> - **Hugging Face URL parsing** — pass a full `https://huggingface.co/org/model` URL directly; it is automatically converted to the bare repo ID.
+> - **Native Windows ROCm support** - works out of the box on RX 6000, RX 7000, and RX 9000 series GPUs.
+> - **Interactive first-run setup** - on first launch, heretic detects your AMD GPU and asks whether to run ROCm setup automatically. Choosing **Y** opens a setup window that detects your GPU generation, installs the matching ROCm PyTorch and SDK wheels, patches `bitsandbytes`, then relaunches heretic in your original terminal. You can also trigger setup manually at any time with `uv run python scripts/setup_rocm.py`.
+> - **Hugging Face URL parsing** - pass a full `https://huggingface.co/org/model` URL directly; it is automatically converted to the bare repo ID.
 >
 > See [WINDOWS_ROCM.md](WINDOWS_ROCM.md) for full setup instructions.
 
@@ -99,18 +99,18 @@ double-click **`Heretic-Launcher.bat`** in the repo root. It opens a graphical
 launcher that walks you through the entire setup and lets you start runs
 without touching the command line:
 
-- **One-click install** — installs the `uv` package manager if missing, runs
+- **One-click install** - installs the `uv` package manager if missing, runs
   `uv sync`, and runs the ROCm GPU setup, each in its own console window.
-- **Setup status panel** — shows at a glance whether uv, the dependencies,
+- **Setup status panel** - shows at a glance whether uv, the dependencies,
   ROCm, and your GPU are ready.
-- **Run configuration** — paste a Hugging Face model ID or URL (or browse to
+- **Run configuration** - paste a Hugging Face model ID or URL (or browse to
   a local model), pick a config preset (default / nohumor / noslop), set
   common options like quantization, trial count, and batch size, and hit
   **Launch**. Heretic starts in a real console window with its full
   interactive TUI; your settings are remembered for next time.
-- **Desktop shortcut** — one click creates a "Heretic" shortcut on your desktop.
+- **Desktop shortcut** - one click creates a "Heretic" shortcut on your desktop.
 
-The launcher needs no dependencies of its own — it runs on any Python via
+The launcher needs no dependencies of its own - it runs on any Python via
 `uv` or the system Python launcher.
 
 ### Quick Start (Windows AMD GPU, command line)
@@ -126,7 +126,7 @@ The launcher needs no dependencies of its own — it runs on any Python via
    uv sync
    ```
 
-3. Run heretic — on first launch it detects your AMD GPU and prompts to run ROCm setup:
+3. Run heretic - on first launch it detects your AMD GPU and prompts to run ROCm setup:
    ```powershell
    uv run heretic Qwen/Qwen3-4B-Instruct-2507
    ```
@@ -157,7 +157,7 @@ models. Set the `quantization` option to `bnb_4bit` to enable quantization.
 For a model too large to fit in GPU plus CPU memory, set `offload_folder`
 (default: an `offload` folder in the working directory) so Accelerate can spill
 weights to disk instead of failing to load. Disk offload lets very large models
-run, but is slow — prefer a model that fits in memory, or a smaller quantization,
+run, but is slow - prefer a model that fits in memory, or a smaller quantization,
 when you can.
 
 After Heretic has finished decensoring a model, you are given the option to
@@ -168,8 +168,8 @@ run standard benchmarks on it, or any combination of those actions.
 
 Heretic measures refusals and KL divergence on a model's actual *answer*, not on
 its internal reasoning. For reasoning models such as Qwen3, DeepSeek-R1, and
-gpt-oss — including those whose chat template injects the `<think>` opener into
-the prompt — Heretic automatically detects the Chain-of-Thought block and skips
+gpt-oss - including those whose chat template injects the `<think>` opener into
+the prompt - Heretic automatically detects the Chain-of-Thought block and skips
 past it before evaluating. No configuration is required; the detected markers can
 be customized through the `chain_of_thought_skips` option.
 

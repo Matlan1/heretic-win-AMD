@@ -24,7 +24,7 @@ jobs:
       - name: Set up Python 3.12
         run: uv python install 3.12
 
-      # Use uvx so ruff runs in its own ephemeral env — no uv sync or
+      # Use uvx so ruff runs in its own ephemeral env - no uv sync or
       # lock-file resolution needed, and no issues with the Windows-only
       # torch/ROCm dependencies being absent on the Linux runner.
       - name: Check formatting

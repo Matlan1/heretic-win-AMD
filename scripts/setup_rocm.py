@@ -1,5 +1,5 @@
 """
-setup_rocm.py — Heretic Windows ROCm pre-flight setup.
+setup_rocm.py - Heretic Windows ROCm pre-flight setup.
 
 Run this ONCE after cloning, before launching heretic:
 
@@ -13,7 +13,7 @@ It will:
   5. Write a .heretic_rocm_arch marker so subsequent launches skip setup.
 
 Because this runs as plain `python` (not as heretic.exe), there is no
-Windows file-lock on the heretic executable — uv sync can freely update it.
+Windows file-lock on the heretic executable - uv sync can freely update it.
 """
 
 import os
@@ -23,7 +23,7 @@ import subprocess
 import sys
 
 # ---------------------------------------------------------------------------
-# Constants — update together when upgrading ROCm / torch.
+# Constants - update together when upgrading ROCm / torch.
 # ---------------------------------------------------------------------------
 _TORCH_VERSION = "2.9.1"
 _ROCM_VERSION = "7.13.0"
@@ -124,7 +124,7 @@ if not is_forced:
             generation_name = "RDNA4 (Radeon RX 9000-series / gfx120X)"
 
 # ---------------------------------------------------------------------------
-# 3. Check marker — skip if already configured for this arch.
+# 3. Check marker - skip if already configured for this arch.
 # ---------------------------------------------------------------------------
 _rdna_map = {"gfx103x_all": "rdna2", "gfx110x_all": "rdna3", "gfx120x_all": "rdna4"}
 _rdna = _rdna_map.get(lib_suffix, "rdna2")
@@ -159,14 +159,14 @@ try:
         "Configure AMD ROCm for heretic?",
         choices=[
             Choice(
-                "Yes — full setup with 4-bit quantization support (recommended)",
+                "Yes - full setup with 4-bit quantization support (recommended)",
                 "install",
             ),
             Choice(
-                "Yes — ROCm only, skip bitsandbytes patch (no 4-bit quantization)",
+                "Yes - ROCm only, skip bitsandbytes patch (no 4-bit quantization)",
                 "install_no_bnb",
             ),
-            Choice("No — keep CPU-only configuration", "skip"),
+            Choice("No - keep CPU-only configuration", "skip"),
         ],
         style=questionary.Style([("highlighted", "reverse")]),
     ).ask()
@@ -174,9 +174,9 @@ try:
         choice = "skip"
 except Exception:
     print("Select action:")
-    print("  [1] Yes — full setup with 4-bit quantization support (recommended)")
-    print("  [2] Yes — ROCm only, skip bitsandbytes patch")
-    print("  [3] No — keep CPU-only configuration")
+    print("  [1] Yes - full setup with 4-bit quantization support (recommended)")
+    print("  [2] Yes - ROCm only, skip bitsandbytes patch")
+    print("  [3] No - keep CPU-only configuration")
     while True:
         try:
             raw = input("Enter number [1]: ").strip()
@@ -228,7 +228,7 @@ if os.path.isfile(_pyproject_variant) and os.path.isfile(_lock_variant):
         # --frozen: use the lock exactly; no re-resolution.
         # --no-install-project: skip reinstalling heretic-llm itself.
         #   Since this script runs BEFORE heretic.exe is launched,
-        #   the exe is not locked — but we still skip it to save time
+        #   the exe is not locked - but we still skip it to save time
         #   (project code hasn't changed, only its deps).
         subprocess.check_call(
             ["uv", "sync", "--frozen", "--no-install-project"], cwd=_repo_root
@@ -244,7 +244,7 @@ if os.path.isfile(_pyproject_variant) and os.path.isfile(_lock_variant):
 
 else:
     # Fallback: direct wheel install (non-git / pip-installed heretic).
-    print("(Variant lock files not found — falling back to direct wheel install)")
+    print("(Variant lock files not found - falling back to direct wheel install)")
     _py = f"{sys.version_info.major}{sys.version_info.minor}"
     _base = f"{_AMD_BASE}/{arch_target}"
     _torch_url = (

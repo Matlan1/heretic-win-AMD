@@ -45,7 +45,7 @@ dependencies = [
     "tomli-w~=1.2",
     "tqdm~=4.67",
     "transformers[kernels]~=5.10",
-    # RDNA4 (gfx120X) — AMD Windows GPU packages, activated by heretic auto-installer.
+    # RDNA4 (gfx120X) - AMD Windows GPU packages, activated by heretic auto-installer.
     # torch is declared as a direct dep so [tool.uv.sources] URL override is applied
     # during `uv lock`. AMD has not published Windows pytorch-triton-rocm for gfx120X,
     # so we pin torch as a direct URL to bypass transitive triton resolution on Windows.

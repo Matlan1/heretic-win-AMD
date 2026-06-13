@@ -45,9 +45,9 @@ dependencies = [
     "tomli-w~=1.2",
     "tqdm~=4.67",
     "transformers[kernels]~=5.10",
-    # RDNA2 (gfx103X) — AMD Windows GPU packages, activated by heretic auto-installer.
+    # RDNA2 (gfx103X) - AMD Windows GPU packages, activated by heretic auto-installer.
     # torch is pinned as a direct URL so uv never reads the AMD wheel's METADATA
-    # (which declares triton+rocm — a Windows-unavailable transitive dep).
+    # (which declares triton+rocm - a Windows-unavailable transitive dep).
     "torch==2.9.1+rocm7.13.0; sys_platform == 'win32'",
     "torchvision==0.24.0+rocm7.13.0; sys_platform == 'win32'",
     "rocm; sys_platform == 'win32'",

@@ -56,7 +56,7 @@ uv run ruff format .
 uv run ruff check --fix .
 ```
 
-CI enforces both — PRs with formatting or lint failures will not be merged.
+CI enforces both - PRs with formatting or lint failures will not be merged.
 
 ---
 
@@ -79,7 +79,7 @@ CI enforces both — PRs with formatting or lint failures will not be merged.
 When syncing from [p-e-w/heretic](https://github.com/p-e-w/heretic):
 
 1. The Windows AMD patches live in a clearly marked block near the top of
-   `src/heretic/main.py` (sections 4–6). Keep them intact when rebasing.
+   `src/heretic/main.py` (sections 4-6). Keep them intact when rebasing.
 2. Check that the `requires-python` and dependency versions in
    `pyproject.toml` are propagated to the three arch variants
    (`pyproject.rdna2.toml`, `pyproject.rdna3.toml`, `pyproject.rdna4.toml`)
