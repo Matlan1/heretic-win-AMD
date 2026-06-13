@@ -158,6 +158,35 @@ After Heretic has finished decensoring a model, you are given the option to
 save the model, upload it to Hugging Face, chat with it to test how well it works,
 run standard benchmarks on it, or any combination of those actions.
 
+### Reasoning ("thinking") models
+
+Heretic measures refusals and KL divergence on a model's actual *answer*, not on
+its internal reasoning. For reasoning models such as Qwen3, DeepSeek-R1, and
+gpt-oss — including those whose chat template injects the `<think>` opener into
+the prompt — Heretic automatically detects the Chain-of-Thought block and skips
+past it before evaluating. No configuration is required; the detected markers can
+be customized through the `chain_of_thought_skips` option.
+
+### GGUF models
+
+Heretic can decensor models distributed in GGUF format. The GGUF is dequantized
+on load, abliterated, and saved as standard safetensors:
+
+```powershell
+# A GGUF file inside a Hugging Face repository:
+uv run heretic bartowski/Qwen2.5-0.5B-Instruct-GGUF --gguf-file Qwen2.5-0.5B-Instruct-Q4_K_M.gguf
+
+# A local .gguf path (the file is detected automatically):
+uv run heretic D:\models\qwen\model-Q8_0.gguf
+```
+
+To additionally write a `.gguf` of the abliterated model, set `--export-gguf`.
+This is a best-effort post-processing step that shells out to llama.cpp's
+`convert_hf_to_gguf.py`; point Heretic at your llama.cpp checkout with
+`--llama-cpp-path` (or put the script on your `PATH`), and choose the output
+type with `--gguf-export-type` (e.g. `q8_0`, `q4_k_m`, `f16`). If llama.cpp is
+not available, the safetensors model is still saved and a hint is printed.
+
 
 ## Research features
 

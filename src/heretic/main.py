@@ -452,6 +452,8 @@ if sys.platform == "win32":
 import math
 import os
 import random
+import shutil
+import subprocess
 import time
 import warnings
 from dataclasses import asdict
@@ -506,6 +508,135 @@ from .utils import (
 )
 
 
+def detect_template_cot_prefix(settings: Settings, model: Model) -> str | None:
+    """
+    Returns the Chain-of-Thought closing marker if the chat template injects an
+    opener into the prompt, or None if it does not.
+
+    Reasoning models such as Qwen3 and DeepSeek-R1 append an opener like "<think>"
+    to the generation prompt via their chat template. In that case the response
+    begins inside the reasoning block, so the common-prefix heuristic never sees
+    the opener. We instead render a sample prompt and, if it ends with a known
+    Chain-of-Thought initializer, return only the closing part of the matching
+    closed block (e.g. "</think>" for the pair ("<think>", "<think></think>")),
+    which is appended as the response prefix to skip straight to the answer.
+    """
+    try:
+        rendered = model.tokenizer.apply_chat_template(
+            [
+                {"role": "system", "content": settings.system_prompt},
+                {"role": "user", "content": "Hello"},
+            ],
+            add_generation_prompt=True,
+            tokenize=False,
+        )
+    except Exception:
+        # Some templates reject a system role or otherwise fail to render; in that
+        # case we simply fall back to the response-based detection below.
+        return None
+
+    rendered = str(rendered).rstrip()
+
+    for cot_initializer, closed_cot_block in settings.chain_of_thought_skips:
+        if rendered.endswith(cot_initializer) and closed_cot_block.startswith(
+            cot_initializer
+        ):
+            return closed_cot_block[len(cot_initializer) :]
+
+    return None
+
+
+def find_gguf_converter(llama_cpp_path: str | None) -> Path | None:
+    """
+    Locates llama.cpp's convert_hf_to_gguf.py script.
+
+    Searches, in order: an explicit llama_cpp_path (file or directory), the
+    system PATH, and a few common checkout locations. Returns the script path,
+    or None if it cannot be found.
+    """
+    candidates: list[Path] = []
+
+    if llama_cpp_path:
+        path = Path(llama_cpp_path)
+        if path.is_file():
+            return path
+        candidates.append(path / "convert_hf_to_gguf.py")
+
+    on_path = shutil.which("convert_hf_to_gguf.py")
+    if on_path:
+        candidates.append(Path(on_path))
+
+    candidates.extend(
+        [
+            Path.home() / "llama.cpp" / "convert_hf_to_gguf.py",
+            Path.cwd() / "llama.cpp" / "convert_hf_to_gguf.py",
+        ]
+    )
+
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    return None
+
+
+def export_to_gguf(save_directory: str, settings: Settings) -> None:
+    """
+    Converts a saved (merged) model to GGUF using llama.cpp, if requested.
+
+    This is a best-effort post-processing step: if the conversion script cannot
+    be found or the conversion fails, a clear message is printed and the run
+    continues, since the safetensors model has already been saved.
+    """
+    converter = find_gguf_converter(settings.llama_cpp_path)
+    if converter is None:
+        print(
+            "[yellow]GGUF export requested, but convert_hf_to_gguf.py was not found.[/]"
+        )
+        print(
+            "[yellow]Clone llama.cpp (https://github.com/ggml-org/llama.cpp), install its[/]"
+        )
+        print(
+            "[yellow]requirements, and set 'llama_cpp_path' (or put the script on PATH).[/]"
+        )
+        print("[yellow]The safetensors model has already been saved.[/]")
+        return
+
+    output_path = (
+        Path(save_directory)
+        / f"{Path(save_directory).name}.{settings.gguf_export_type}.gguf"
+    )
+
+    command = [
+        sys.executable,
+        str(converter),
+        save_directory,
+        "--outfile",
+        str(output_path),
+        "--outtype",
+        settings.gguf_export_type,
+    ]
+
+    print(f"Converting to GGUF ([bold]{settings.gguf_export_type}[/])...")
+    print(f"* Running: [bold]{' '.join(command)}[/]")
+    try:
+        result = subprocess.run(command, check=False)
+    except OSError as error:
+        print(f"[red]GGUF conversion could not be started:[/] {error}")
+        print("[yellow]The safetensors model has already been saved.[/]")
+        return
+
+    if result.returncode == 0:
+        print(f"GGUF model saved to [bold]{output_path}[/].")
+    else:
+        print(
+            "[red]GGUF conversion failed.[/] The llama.cpp script may need its Python "
+            "requirements installed (pip install -r requirements.txt in the llama.cpp repo), "
+            "or this architecture may not be supported by your llama.cpp version."
+        )
+        print("[yellow]The safetensors model has already been saved.[/]")
+
+
 def obtain_export_strategy(
     settings: Settings,
     model: Model,
@@ -529,37 +660,45 @@ def obtain_export_strategy(
         )
         print("[yellow]This can lead to system freezes if you run out of memory.[/]")
 
-        try:
-            # Estimate memory requirements by loading the model structure on the "meta" device.
-            # This doesn't consume actual RAM but allows us to inspect the parameter count/dtype.
-            #
-            # Suppress warnings during meta device loading (e.g., "Some weights were not initialized").
-            # These are expected and harmless since we're only inspecting model structure, not running inference.
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                meta_model = get_model_class(settings.model).from_pretrained(
-                    settings.model,
-                    device_map="meta",
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True
-                    if settings.model in model.trusted_models
-                    else None,
-                    **model.revision_kwargs,
-                )
-                footprint_bytes = meta_model.get_memory_footprint()
-                footprint_gb = footprint_bytes / (1024**3)
-                print(
-                    f"[yellow]Estimated RAM required (excluding overhead): [bold]~{footprint_gb:.2f} GB[/][/]"
-                )
-        except Exception:
-            # Fallback if meta loading fails (e.g. owing to custom model code
-            # or bitsandbytes quantization config issues on the meta device).
+        if model.gguf_kwargs:
+            # GGUF models are dequantized during loading and cannot be re-loaded on
+            # the "meta" device for estimation, so fall back to a rule of thumb.
+            print("[yellow]GGUF model: meta-device estimation is unavailable.[/]")
             print(
                 "[yellow]Rule of thumb: You need approximately 3x the parameter count in GB RAM.[/]"
             )
-            print(
-                "[yellow]Example: A 27B model requires ~80GB RAM. A 70B model requires ~200GB RAM.[/]"
-            )
+        else:
+            try:
+                # Estimate memory requirements by loading the model structure on the "meta" device.
+                # This doesn't consume actual RAM but allows us to inspect the parameter count/dtype.
+                #
+                # Suppress warnings during meta device loading (e.g., "Some weights were not initialized").
+                # These are expected and harmless since we're only inspecting model structure, not running inference.
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    meta_model = get_model_class(settings.model).from_pretrained(
+                        settings.model,
+                        device_map="meta",
+                        torch_dtype=torch.bfloat16,
+                        trust_remote_code=True
+                        if settings.model in model.trusted_models
+                        else None,
+                        **model.revision_kwargs,
+                    )
+                    footprint_bytes = meta_model.get_memory_footprint()
+                    footprint_gb = footprint_bytes / (1024**3)
+                    print(
+                        f"[yellow]Estimated RAM required (excluding overhead): [bold]~{footprint_gb:.2f} GB[/][/]"
+                    )
+            except Exception:
+                # Fallback if meta loading fails (e.g. owing to custom model code
+                # or bitsandbytes quantization config issues on the meta device).
+                print(
+                    "[yellow]Rule of thumb: You need approximately 3x the parameter count in GB RAM.[/]"
+                )
+                print(
+                    "[yellow]Example: A 27B model requires ~80GB RAM. A 70B model requires ~200GB RAM.[/]"
+                )
         print()
 
     strategy = prompt_select(
@@ -854,40 +993,57 @@ def run():
         print()
         print("Checking for common response prefix...")
         prefix_check_prompts = good_prompts[:100] + bad_prompts[:100]
-        responses = model.get_responses_batched(prefix_check_prompts)
 
-        # Despite being located in os.path, commonprefix actually performs
-        # a naive string operation without any path-specific logic,
-        # which is exactly what we need here. Trailing spaces are removed
-        # to avoid issues where multiple different tokens that all start
-        # with a space character lead to the common prefix ending with
-        # a space, which would result in an uncommon tokenization.
-        settings.response_prefix = commonprefix(responses).rstrip(" ")
+        def recheck_prefix() -> None:
+            # When using a Chain-of-Thought skip, we need to check that the prefix
+            # is actually complete (e.g. not missing a trailing newline).
+            print("* Rechecking with prefix...")
+            responses = model.get_responses_batched(prefix_check_prompts)
+            additional_prefix = commonprefix(responses).rstrip(" ")
+            if additional_prefix:
+                assert settings.response_prefix is not None
+                settings.response_prefix += additional_prefix
+                print(f"* Extended prefix found: [bold]{settings.response_prefix!r}[/]")
 
-        if settings.response_prefix:
-            print(f"* Prefix found: [bold]{settings.response_prefix!r}[/]")
+        # Reasoning models whose chat template injects the Chain-of-Thought opener
+        # (e.g. "<think>") into the prompt produce responses that start inside the
+        # reasoning block, so the opener never appears in the response prefix.
+        # Detect this from the rendered template and skip to the closing marker.
+        template_cot_prefix = detect_template_cot_prefix(settings, model)
 
-            for cot_initializer, closed_cot_block in settings.chain_of_thought_skips:
-                if settings.response_prefix.startswith(cot_initializer):
-                    settings.response_prefix = closed_cot_block
-                    print(
-                        f"* Closed Chain-of-Thought block: [bold]{settings.response_prefix!r}[/]"
-                    )
-
-                    # When using a Chain-of-Thought skip, we need to check that the prefix
-                    # is actually complete (e.g. not missing a trailing newline).
-                    print("* Rechecking with prefix...")
-                    responses = model.get_responses_batched(prefix_check_prompts)
-                    additional_prefix = commonprefix(responses).rstrip(" ")
-                    if additional_prefix:
-                        settings.response_prefix += additional_prefix
-                        print(
-                            f"* Extended prefix found: [bold]{settings.response_prefix!r}[/]"
-                        )
-
-                    break
+        if template_cot_prefix is not None:
+            settings.response_prefix = template_cot_prefix
+            print(
+                f"* Closed Chain-of-Thought block: [bold]{settings.response_prefix!r}[/]"
+            )
+            recheck_prefix()
         else:
-            print("* None found")
+            responses = model.get_responses_batched(prefix_check_prompts)
+
+            # Despite being located in os.path, commonprefix actually performs
+            # a naive string operation without any path-specific logic,
+            # which is exactly what we need here. Trailing spaces are removed
+            # to avoid issues where multiple different tokens that all start
+            # with a space character lead to the common prefix ending with
+            # a space, which would result in an uncommon tokenization.
+            settings.response_prefix = commonprefix(responses).rstrip(" ")
+
+            if settings.response_prefix:
+                print(f"* Prefix found: [bold]{settings.response_prefix!r}[/]")
+
+                for (
+                    cot_initializer,
+                    closed_cot_block,
+                ) in settings.chain_of_thought_skips:
+                    if settings.response_prefix.startswith(cot_initializer):
+                        settings.response_prefix = closed_cot_block
+                        print(
+                            f"* Closed Chain-of-Thought block: [bold]{settings.response_prefix!r}[/]"
+                        )
+                        recheck_prefix()
+                        break
+            else:
+                print("* None found")
 
     evaluator = Evaluator(settings, model)
 
@@ -1317,6 +1473,14 @@ def run():
                                 reset_trial_model()
 
                             print(f"Model saved to [bold]{save_directory}[/].")
+
+                            # Optional GGUF conversion. Only meaningful for a merged
+                            # model: a bare LoRA adapter has no weights to convert.
+                            if (
+                                settings.export_gguf
+                                and strategy != ExportStrategy.ADAPTER
+                            ):
+                                export_to_gguf(save_directory, settings)
 
                             if reproduction_mode and verify_hashes:
                                 print("Verifying hashes of weight files...")

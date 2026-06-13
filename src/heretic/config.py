@@ -135,6 +135,15 @@ class Settings(BaseSettings):
         description="Hugging Face commit hash of the model.",
     )
 
+    gguf_file: str | None = Field(
+        default=None,
+        description=(
+            "Name of the GGUF file to load from the model repository or directory. "
+            "Enables loading models distributed in GGUF format, which are dequantized "
+            "on load. Detected automatically if the model path ends in '.gguf'."
+        ),
+    )
+
     evaluate_model: str | None = Field(
         default=None,
         description=(
@@ -456,6 +465,30 @@ class Settings(BaseSettings):
     export_strategy: ExportStrategy | None = Field(
         default=None,
         description='How to export the model: "merge", "adapter", or unset to prompt the user.',
+    )
+
+    export_gguf: bool = Field(
+        default=False,
+        description=(
+            "Whether to also convert the abliterated model to GGUF format after saving, "
+            "using llama.cpp's conversion script."
+        ),
+    )
+
+    gguf_export_type: str = Field(
+        default="q8_0",
+        description=(
+            "Quantization type for the exported GGUF file when export_gguf is enabled "
+            "(e.g. 'f16', 'q8_0', 'q4_k_m')."
+        ),
+    )
+
+    llama_cpp_path: str | None = Field(
+        default=None,
+        description=(
+            "Path to a llama.cpp checkout or its convert_hf_to_gguf.py script, used when "
+            "export_gguf is enabled. Common locations and PATH are searched if not set."
+        ),
     )
 
     refusal_markers: list[str] = Field(

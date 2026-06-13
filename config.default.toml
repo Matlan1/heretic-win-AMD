@@ -24,6 +24,11 @@ quantization = "none"
 # Device map to pass to Accelerate when loading the model.
 device_map = "auto"
 
+# Name of the GGUF file to load from the model repository or directory.
+# Enables loading models distributed in GGUF format, which are dequantized
+# on load. Detected automatically if the model path ends in '.gguf'.
+# gguf_file = "model-Q8_0.gguf"
+
 # Maximum memory to allocate per device.
 # max_memory = { "0" = "20GB", "cpu" = "64GB" }
 
@@ -128,6 +133,18 @@ study_checkpoint_dir = "checkpoints"
 
 # Maximum size for individual safetensors files generated when exporting a model.
 max_shard_size = "5GB"
+
+# Whether to also convert the abliterated model to GGUF format after saving,
+# using llama.cpp's conversion script.
+export_gguf = false
+
+# Quantization type for the exported GGUF file when export_gguf is enabled
+# (e.g. "f16", "q8_0", "q4_k_m").
+gguf_export_type = "q8_0"
+
+# Path to a llama.cpp checkout or its convert_hf_to_gguf.py script, used when
+# export_gguf is enabled. Common locations and PATH are searched if not set.
+# llama_cpp_path = "C:/tools/llama.cpp"
 
 # Strings whose presence in a response (case insensitive) identifies the response as a refusal.
 refusal_markers = [
