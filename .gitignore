@@ -24,6 +24,9 @@ wheels/
 # Residual plots
 /plots/
 
+# Accelerate disk-offload folder (large models that spill to disk)
+/offload/
+
 # AMD ROCm arch marker (machine-specific, written by auto-installer)
 /.heretic_rocm_arch
 

@@ -99,6 +99,12 @@ class Model:
             self.model_path = str(gguf_path.parent) if gguf_path.parent.name else "."
         self.gguf_kwargs: dict[str, str] = {"gguf_file": gguf_name} if gguf_name else {}
 
+        # Folder used by Accelerate to offload weights to disk when a model does
+        # not fit in GPU + CPU memory. Providing it lets large models load
+        # (slowly) instead of failing with "provide an offload_folder".
+        self.offload_folder = settings.offload_folder or str(Path.cwd() / "offload")
+        Path(self.offload_folder).mkdir(parents=True, exist_ok=True)
+
         print()
         print(f"Loading model [bold]{settings.model}[/]...")
         if gguf_name:
@@ -173,6 +179,7 @@ class Model:
                     dtype=dtype,
                     device_map=settings.device_map,
                     max_memory=self.max_memory,
+                    offload_folder=self.offload_folder,
                     trust_remote_code=True
                     if settings.model in self.trusted_models
                     else None,
@@ -422,6 +429,7 @@ class Model:
             dtype=self.dtype,
             device_map=self.settings.device_map,
             max_memory=self.max_memory,
+            offload_folder=self.offload_folder,
             trust_remote_code=True
             if self.settings.model in self.trusted_models
             else None,

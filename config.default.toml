@@ -32,6 +32,11 @@ device_map = "auto"
 # Maximum memory to allocate per device.
 # max_memory = { "0" = "20GB", "cpu" = "64GB" }
 
+# Directory used to offload model weights to disk when they do not fit in GPU
+# and CPU memory. Defaults to an "offload" folder in the working directory.
+# Disk offload lets very large models load, but is slow.
+# offload_folder = "offload"
+
 # Whether to move intermediate analysis tensors (such as residuals and logprobs)
 # to CPU memory as soon as possible to reduce peak VRAM usage.
 # This lowers peak VRAM usage during residual analysis and evaluation,

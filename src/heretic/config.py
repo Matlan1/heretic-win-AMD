@@ -210,6 +210,16 @@ class Settings(BaseSettings):
         description='Maximum memory to allocate per device (e.g., { "0" = "20GB", "cpu" = "64GB" }).',
     )
 
+    offload_folder: str | None = Field(
+        default=None,
+        description=(
+            "Directory used by Accelerate to offload model weights to disk when they "
+            "do not fit in GPU and CPU memory. Defaults to an 'offload' folder in the "
+            "working directory. Disk offload lets very large models load, but is slow, "
+            "so prefer a model that fits in memory when possible."
+        ),
+    )
+
     offload_outputs_to_cpu: bool = Field(
         default=True,
         description=(
