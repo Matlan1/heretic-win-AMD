@@ -170,21 +170,16 @@ be customized through the `chain_of_thought_skips` option.
 ### GGUF models
 
 Heretic can decensor models distributed in GGUF format. The GGUF is dequantized
-on load, abliterated, and saved as standard safetensors. Loading GGUF files
-requires the `gguf` package (a one-time install):
-
-```powershell
-uv pip install "gguf>=0.10.0"
-```
-
-Then:
+on load, abliterated, and saved as standard safetensors. (If you installed
+Heretic before GGUF support was added, run `uv sync` once to pull in the `gguf`
+package.)
 
 ```powershell
 # A GGUF file inside a Hugging Face repository:
-uv run heretic bartowski/Qwen2.5-0.5B-Instruct-GGUF --gguf-file Qwen2.5-0.5B-Instruct-Q4_K_M.gguf
+uv run heretic --model bartowski/Qwen2.5-0.5B-Instruct-GGUF --gguf-file Qwen2.5-0.5B-Instruct-Q4_K_M.gguf
 
 # A local .gguf path (the file is detected automatically):
-uv run heretic D:\models\qwen\model-Q8_0.gguf
+uv run heretic --model D:\models\qwen\model-Q8_0.gguf
 ```
 
 To additionally write a `.gguf` of the abliterated model, set `--export-gguf`.
