@@ -124,9 +124,10 @@ class Model:
                 )
             if settings.quantization == QuantizationMethod.BNB_4BIT:
                 print(
-                    "* [yellow]Experimental:[/] re-quantizing to 4-bit after "
-                    "dequantizing the GGUF (greatly reduces VRAM use; not all "
-                    "architectures may support this)."
+                    "* [yellow]Ignoring 4-bit quantization:[/] Transformers does not "
+                    "allow quantizing a model loaded from GGUF, so it is loaded "
+                    "dequantized. Large GGUF models may need disk offload (slow) or a "
+                    "smaller model that fits in memory."
                 )
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -305,6 +306,12 @@ class Model:
         Returns:
             BitsAndBytesConfig or None
         """
+        # Transformers does not allow combining a GGUF source with a quantization
+        # config ("You cannot combine Quantization and loading a model from a GGUF
+        # file"), so skip quantization for GGUF inputs and load them dequantized.
+        if self.gguf_kwargs:
+            return None
+
         if self.settings.quantization == QuantizationMethod.BNB_4BIT:
             if bnb is None:
                 raise RuntimeError(
