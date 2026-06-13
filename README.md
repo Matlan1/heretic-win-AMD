@@ -175,11 +175,12 @@ Heretic before GGUF support was added, run `uv sync` once to pull in the `gguf`
 package.)
 
 ```powershell
-# A GGUF file inside a Hugging Face repository:
-uv run heretic --model bartowski/Qwen2.5-0.5B-Instruct-GGUF --gguf-file Qwen2.5-0.5B-Instruct-Q4_K_M.gguf
+# A local .gguf path (like any model, it can be passed positionally):
+uv run heretic D:\models\qwen\model-Q8_0.gguf
 
-# A local .gguf path (the file is detected automatically):
-uv run heretic --model D:\models\qwen\model-Q8_0.gguf
+# A GGUF file inside a Hugging Face repository. As with any extra flags, give
+# the model with --model so it isn't mistaken for a flag value:
+uv run heretic --model bartowski/Qwen2.5-0.5B-Instruct-GGUF --gguf-file Qwen2.5-0.5B-Instruct-Q4_K_M.gguf
 ```
 
 To additionally write a `.gguf` of the abliterated model, set `--export-gguf`.
