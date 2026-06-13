@@ -536,7 +536,9 @@ class HereticLauncher(tk.Tk):
         args = []
         model = self.model.get().strip()
         if model:
-            args.append(model)
+            # heretic's CLI requires the model as the --model option; it does not
+            # accept a bare positional argument.
+            args += ["--model", model]
         if self.evaluate_model.get().strip():
             args += ["--evaluate-model", self.evaluate_model.get().strip()]
         if self.quantization.get() != "(config)":
