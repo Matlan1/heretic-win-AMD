@@ -149,7 +149,7 @@ gguf_export_type = "q8_0"
 
 # Path to a llama.cpp checkout or its convert_hf_to_gguf.py script, used when
 # export_gguf is enabled. Common locations and PATH are searched if not set.
-# llama_cpp_path = "C:/tools/llama.cpp"
+# llama_cpp_path = "C:/tools/llama.cpp"  # hygiene-ok
 
 # Strings whose presence in a response (case insensitive) identifies the response as a refusal.
 refusal_markers = [
