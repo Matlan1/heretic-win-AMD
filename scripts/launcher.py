@@ -583,8 +583,9 @@ class HereticLauncher(tk.Tk):
         args = []
         model = self.model.get().strip()
         if model:
-            # heretic's CLI requires the model as the --model option; it does not
-            # accept a bare positional argument.
+            # Pass the model as --model explicitly. heretic also accepts a bare
+            # positional model, but only as the *last* argument; since the
+            # launcher appends other flags after it, --model is the safe form.
             args += ["--model", model]
         if self.evaluate_model.get().strip():
             args += ["--evaluate-model", self.evaluate_model.get().strip()]

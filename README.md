@@ -154,6 +154,12 @@ takes about 20-30 minutes. Note that Heretic supports model quantization with
 bitsandbytes, which can drastically reduce the amount of VRAM required to process
 models. Set the `quantization` option to `bnb_4bit` to enable quantization.
 
+For a model too large to fit in GPU plus CPU memory, set `offload_folder`
+(default: an `offload` folder in the working directory) so Accelerate can spill
+weights to disk instead of failing to load. Disk offload lets very large models
+run, but is slow — prefer a model that fits in memory, or a smaller quantization,
+when you can.
+
 After Heretic has finished decensoring a model, you are given the option to
 save the model, upload it to Hugging Face, chat with it to test how well it works,
 run standard benchmarks on it, or any combination of those actions.
@@ -195,11 +201,11 @@ not available, the safetensors model is still saved and a hint is printed.
 
 In addition to its primary function of removing model censorship, Heretic also
 provides features designed to support research into the semantics of model internals
-(interpretability). To use those features, you need to install Heretic with the
-optional `research` extra:
+(interpretability). These need the optional `research` extra. Since this fork is
+run from a clone with `uv` (not installed from PyPI), enable it with:
 
-```
-pip install -U heretic-llm[research]
+```powershell
+uv sync --extra research
 ```
 
 This gives you access to the following functionality:
