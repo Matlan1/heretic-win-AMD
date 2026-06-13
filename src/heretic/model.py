@@ -124,8 +124,9 @@ class Model:
                 )
             if settings.quantization == QuantizationMethod.BNB_4BIT:
                 print(
-                    "* [yellow]Ignoring 4-bit quantization:[/] GGUF models are already "
-                    "dequantized on load, and stacking bitsandbytes on top is unsupported."
+                    "* [yellow]Experimental:[/] re-quantizing to 4-bit after "
+                    "dequantizing the GGUF (greatly reduces VRAM use; not all "
+                    "architectures may support this)."
                 )
 
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -304,10 +305,6 @@ class Model:
         Returns:
             BitsAndBytesConfig or None
         """
-        # GGUF models are dequantized on load; bitsandbytes cannot be layered on top.
-        if self.gguf_kwargs:
-            return None
-
         if self.settings.quantization == QuantizationMethod.BNB_4BIT:
             if bnb is None:
                 raise RuntimeError(
