@@ -29,6 +29,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import tkinter as tk
 from pathlib import Path
@@ -136,21 +137,65 @@ def rocm_marker() -> str:
 # ---------------------------------------------------------------------------
 # Console spawning.
 # ---------------------------------------------------------------------------
-def run_in_console(command: str, env: dict | None = None) -> None:
-    """Run a command in a new console window that stays open afterwards."""
+def run_in_console(
+    command: str, env: dict | None = None, keep_open: bool = True
+) -> None:
+    """Run a command in a new console window.
+
+    keep_open=True (the default) leaves the window open after the command
+    exits, which is what the interactive heretic run needs. keep_open=False
+    closes the window automatically on success and keeps it open only on
+    failure, so install/setup windows don't linger but errors stay readable.
+    """
     full_env = dict(os.environ)
     if env:
         full_env.update(env)
-    if sys.platform == "win32":
+
+    if sys.platform != "win32":
+        # Non-Windows fallback (this fork targets Windows, but don't break).
+        subprocess.Popen(shlex.split(command), cwd=REPO_ROOT, env=full_env)
+        return
+
+    if keep_open:
         subprocess.Popen(
             f'cmd /k "{command}"',
             cwd=REPO_ROOT,
             env=full_env,
             creationflags=subprocess.CREATE_NEW_CONSOLE,
         )
-    else:
-        # Non-Windows fallback (this fork targets Windows, but don't break).
-        subprocess.Popen(shlex.split(command), cwd=REPO_ROOT, env=full_env)
+        return
+
+    # Auto-closing window. The command is written to a temporary batch file
+    # rather than passed inline to "cmd /c", because some commands (e.g. the
+    # uv installer) already contain quotes, and nesting those inside a compound
+    # "cmd /c" string breaks Windows' command-line parsing. The batch file
+    # closes on success and pauses on failure, then deletes itself.
+    script = (
+        "@echo off\r\n"
+        f'cd /d "{REPO_ROOT}"\r\n'
+        f"{command}\r\n"
+        "if errorlevel 1 (\r\n"
+        "    echo.\r\n"
+        "    echo Step failed - review the messages above.\r\n"
+        "    pause\r\n"
+        ") else (\r\n"
+        "    echo.\r\n"
+        "    echo Done. This window will close...\r\n"
+        "    timeout /t 3 >nul\r\n"
+        ")\r\n"
+        # Exit the batch context before deleting the file, so cmd does not
+        # print "The batch file cannot be found." after it removes itself.
+        '(goto) 2>nul & del "%~f0"\r\n'
+    )
+    fd, bat_path = tempfile.mkstemp(suffix=".bat", prefix="heretic_step_")
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        handle.write(script)
+    subprocess.Popen(
+        ["cmd", "/c", bat_path],
+        cwd=REPO_ROOT,
+        env=full_env,
+        creationflags=subprocess.CREATE_NEW_CONSOLE,
+    )
 
 
 def quote_arg(arg: str) -> str:
@@ -501,7 +546,7 @@ class HereticLauncher(tk.Tk):
         return quote_arg(self.uv_path)
 
     def install_uv(self) -> None:
-        run_in_console(UV_INSTALL_CMD)
+        run_in_console(UV_INSTALL_CMD, keep_open=False)
         messagebox.showinfo(
             "Installing uv",
             "uv is being installed in the new console window.\n\n"
@@ -512,7 +557,7 @@ class HereticLauncher(tk.Tk):
     def run_uv_sync(self) -> None:
         uv = self._uv()
         if uv:
-            run_in_console(f"{uv} sync")
+            run_in_console(f"{uv} sync", keep_open=False)
 
     def run_rocm_setup(self) -> None:
         uv = self._uv()
@@ -522,7 +567,9 @@ class HereticLauncher(tk.Tk):
         arch = self.force_arch.get()
         if arch != "auto-detect":
             env["HERETIC_FORCE_ARCH"] = arch
-        run_in_console(f"{uv} run python scripts\\setup_rocm.py", env=env)
+        run_in_console(
+            f"{uv} run python scripts\\setup_rocm.py", env=env, keep_open=False
+        )
 
     def browse_model(self) -> None:
         path = filedialog.askdirectory(
