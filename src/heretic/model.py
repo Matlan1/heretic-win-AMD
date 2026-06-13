@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2025-2026  Philipp Emanuel Weidmann <pew@worldwidemann.com> + contributors
 
+import importlib.util
 import math
 from contextlib import suppress
 from dataclasses import dataclass
@@ -104,6 +105,17 @@ class Model:
             print(
                 f"* Loading from GGUF file [bold]{gguf_name}[/] (dequantized on load)"
             )
+            # Transformers parses GGUF files through the separate 'gguf' package.
+            # Check for it up front to give a clear, actionable error instead of
+            # the confusing "install torch and gguf" message raised deep inside
+            # Transformers (torch is already installed at this point).
+            if importlib.util.find_spec("gguf") is None:
+                raise ImportError(
+                    "Loading GGUF models requires the 'gguf' package, which is not "
+                    "installed.\n\nInstall it with:\n\n"
+                    '    uv pip install "gguf>=0.10.0"\n\n'
+                    "then run Heretic again."
+                )
             if settings.quantization == QuantizationMethod.BNB_4BIT:
                 print(
                     "* [yellow]Ignoring 4-bit quantization:[/] GGUF models are already "
